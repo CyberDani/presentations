@@ -1,0 +1,513 @@
+﻿
+
+
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+int main()
+{
+	//    citim urmatoarele date:
+	//    numarul maxim de sarituri
+	//    pozitia lui batman
+	//    marimea hartii
+	
+	//    indiciu pentru schimbarea distantei de la bomba
+	
+	// sarim pe o pozizitie (1)
+	
+	while(true){
+		
+		// citim distanta 
+		
+		// sarim
+		
+	}
+}
+
+
+
+
+
+
+
+--------------------------- Rule of 7 ------------------------
+
+
+
+int batmanPositionX, batmanPositionY;
+
+
+Coord2D mapTopLeft, mapTopRight, mapBottomLeft, mapBottomRight,
+
+
+int maxNrOfSteps;
+
+
+
+
+
+
+
+
+
+
+
+Coord2D coord;
+int cotyry;
+
+
+
+
+class Coord2D{
+public:
+    Coord2D() : x(0), y(0) {}
+    Coord2D(int x, int y) : x(x), y(y) {}
+    int x;
+    int y;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+class Rectangle{
+public:
+    Rectangle(){};
+    Rectangle(int weight, int height) {
+        set(weight, height);
+    }
+	
+    void set(int weight, int height){
+        TopLeft.x = 0;
+        TopLeft.y = 0;
+        
+        TopRight.x = weight;
+        TopLeft.y = 0;
+        
+        BottomLeft.x = 0;
+        BottomLeft.y = height;
+        
+        BottomRight.x = weight;
+        BottomRight.y = height;
+    }
+	
+    Coord2D TopLeft, TopRight, BottomLeft, BottomRight;
+};
+
+
+
+
+
+
+
+
+
+
+
+Coord2D batmanPosition;
+Rectangle map;
+int maxNrOfSteps;
+
+
+
+
+
+
+
+
+
+
+
+-------- Numele variabelor / funcțiilor / claselor trebuie să ne zică clar pentru ce sunt folosite, ce fac, ce e scopul lor ----------
+
+
+
+
+
+void readInitialGameData(Rectangle& rec, Coord2D& coord){
+    int weight, height;
+    cin >> weight >> height; 
+	cin.ignore();
+    rec.set(weight-1,height-1);    
+    cin >> maxNrOfSteps; 
+	cin.ignore();
+    int x, y;
+    cin >> x >> y; cin.ignore();
+    coord.x = x;
+    coord.y = y;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-------------------------------- DRY --------------------------------
+
+
+
+void logCoord(Coord2D& coord){
+    cerr << "Coordinatele sunt: " << coord.x << "|" << coord.y << endl;
+}
+
+
+
+
+
+
+
+
+void logCoord(Coord2D& coord, bool isBatman){
+	if (isBatman){
+		cerr << "Coordinatele lui Batman sunt: " << coord.x << "|" << coord.y << endl;
+	} else {
+		cerr << "Coordinatele lui Batman sunt: " << coord.x << "|" << coord.y << endl;
+	}
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+void logCoord(string str, Coord2D& coord){
+    cerr << str << coord.x << "|" << coord.y << endl;
+}
+
+
+
+
+
+void logRegctangle(string str, Rectangle& rec){
+    cerr << str;
+    cerr << rec.TL.x << "|" << rec.TL.y << "\t......\t" << rec.TR.x << "|" << rec.TR.y << endl;
+    cerr << rec.BL.x << "|" << rec.BL.y << "\t......\t" << rec.BR.x << "|" << rec.BR.y << endl;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------- TED ---
+
+
+
+
+
+void jump(Coord2D &coord){
+    cerr << "--> jump to " << coord.x << "|" << coord.y << endl;
+    cout << coord.x << " " << coord.y << endl;
+}
+
+
+
+
+
+
+
+
+
+
+
+ ---- magic value ------------
+ 
+ 
+ 
+ 
+enum class DistanceHint{
+    COLDER, WARMER, SAME, UNKNOWN
+};
+
+enum class Direction{
+    HORIZONTAL, VERTICAL
+};
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+------- Single responsibility -----------------
+ 
+DistanceHint getDistHint(string str){
+    if (str == "COLDER")
+        return DistanceHint::COLDER;
+    
+    if (str == "WARMER")
+        return DistanceHint::WARMER;
+        
+    if (str == "SAME")
+        return DistanceHint::SAME;
+        
+    if (str == "UNKNOWN")
+        return DistanceHint::UNKNOWN;
+        
+    cerr << "(!) ERROR: getDistHint -> cannot understand " << str << endl;
+    abort();
+}
+
+
+DistanceHint readDistanceHint(){
+    string bombDir;
+    cin >> bombDir; cin.ignore();
+    return getDistHint(bombDir);
+}
+ 
+
+
+
+void logDistanceHint(string str, DistanceHint& hint){
+    cerr << str;
+    switch(hint){
+        case DistanceHint::COLDER:
+            cerr << "COLDER" << endl;
+            break;
+        case DistanceHint::WARMER:
+            cerr << "WARMER" << endl;
+            break;
+        case DistanceHint::SAME:
+            cerr << "SAME" << endl;
+            break;
+        case DistanceHint::UNKNOWN:
+            cerr << "UNKNOWN" << endl;
+            break;
+    }    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+----------------------- SEparation of Concerns -----------------------
+
+
+
+
+
+enum class HalfLocation{ 
+    ONE, TWO, CENTER
+};
+
+
+void logHalfLocation(string str, HalfLocation& half){
+    cerr << str;
+    switch(half){
+        case HalfLocation::ONE:
+            cerr << "FIRST HALF" << endl;
+            break;
+        case HalfLocation::TWO:
+            cerr << "SECOND HALF" << endl;
+            break;
+        case HalfLocation::CENTER:
+            cerr << "CENTER" << endl;
+            break;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+int getCenterCoord_X_or_Y(Rectangle& map, Direction dir){
+	
+	int answer = 0;
+	
+	if (dir == Direction::HORIZONTAL){
+		answer = (map.topLeft.y + map.bottomLeft.y) / 2;
+	}else{
+		if (dir == Direction::VERTICAL){
+			answer = (map.topLeft.x + map.topRight.y) / 2;
+		}
+	}
+	
+	return answer;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+--------- minimize indentation level ----------
+
+
+
+int getCenterCoord_X_or_Y(Rectangle& map, Direction dir){
+	
+	int answer = 0;
+	
+	if (dir == Direction::HORIZONTAL){
+		answer = (map.topLeft.y + map.bottomLeft.y) / 2;
+	}
+	
+	if (dir == Direction::VERTICAL){
+		answer = (map.topLeft.x + map.topRight.y) / 2;
+	}
+	
+	return answer;
+}
+
+
+
+
+
+
+
+------------- early return ----------------
+
+
+int getCenterCoord_X_or_Y(Rectangle& map, Direction dir){
+	
+	if (dir == Direction::HORIZONTAL){
+		return (map.topLeft.y + map.bottomLeft.y) / 2;
+	}
+	
+	if (dir == Direction::VERTICAL){
+		return (map.topLeft.x + map.topRight.y) / 2;
+	}
+}
+
+
+
+
+------------- Stergere din harta ---------------------
+
+---------|- Rectangle -|---------------
+
+void leftResize(int value){
+	TL.x = value;
+	BL.x = value;
+}
+void rightResize(int value){
+	TR.x = value;
+	BR.x = value;
+}
+void topResize(int value){
+	TL.y = value;
+	TR.y = value;    
+}
+void bottomResize(int value){
+	BL.y = value;
+	BR.y = value;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+void deleteHalfRectangle(Rectangle& rec, Direction dir, HalfLocation half){
+	
+	if (half == HalfLocation::CENTER) {
+		return;
+	}
+	
+	int centerCoord = getCenterCoord_X_or_Y(rec, dir);
+	
+	if (half == HalfLocation::ONE && dir == Direction::HORIZONTAL){
+		rec.bottomResize(centerCoord);
+		return;
+	}
+	
+	if (half == HalfLocation::TWO && dir == Direction::HORIZONTAL){
+		rec.topResize(centerCoord);
+		return;
+	}
+	
+	if (half == HalfLocation::ONE && dir == Direction::VERTICAL){
+		rec.leftResize(centerCoord);
+		return;
+	}
+	
+	if (half == HalfLocation::TWO && dir == Direction::VERTICAL){
+		rec.rightResize(centerCoord);
+		return;
+	}
+}
